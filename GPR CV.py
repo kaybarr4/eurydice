@@ -158,7 +158,6 @@ class CrossValidation():
         rv_errors (np.array): array of radial velocity errors
         kernel_function (func): describes the covariance between two points
         orbit_params (array or list): [transit time, period, eccentricity, omega, and keplerian semi-amplitude] 
-        train_split (float): number from 0 to 1 that will divide data into a training and testing set
         gamma (float, optional): Defaults to 0.
         jitter (float, optional): Defaults to 0.
 
