@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
 
 ##### KEPLERIAN SIGNAL HELPER FUNCTIONS #####
@@ -33,7 +34,7 @@ def kepler_solver(M_anom, ecc, tolerance = 1e-7):
     indx = np.where(error > tolerance)
     n = 0
 
-    ### run algorithm until a value is found within tolerance
+    ### run algorithm until all values are found within tolerance
     while (indx[0].size > 0) and (n <= 1000000):
         E_anom[indx] -= diff[indx]
         diff[indx] = f(E_anom[indx], ecc[indx], M_anom[indx]) / df(E_anom[indx], ecc[indx])
@@ -42,7 +43,7 @@ def kepler_solver(M_anom, ecc, tolerance = 1e-7):
         n += 1
 
     if n > 1000000:
-        raise ValueError('Sorry, this is taking too long.')
+        raise RuntimeError('Sorry, this is taking too long.')
     
     return E_anom
 
@@ -79,7 +80,7 @@ def calc_mean_anomaly(times, period, t_periastron):
         (np.array): array of mean anomalies
 
     """
-    return 2* np.pi / period * (times - t_periastron)
+    return (2* np.pi / period * (times - t_periastron)) % (2*np.pi)
 
 def calc_true_anomaly(E_anom, ecc):
     """
@@ -137,7 +138,7 @@ def build_covariance_matrix(p1, p2, kernel_function):
         kernel_function (func): describes the covariance between two points
 
     Return:
-        cov_matrix (np.array): array of size NxM filled with values computed by kernel
+        cov_matrix (np.array): an array of size NxM filled with values computed by kernel
     '''
     cov_matrix = np.zeros((len(p1),len(p2)))
 
@@ -156,7 +157,8 @@ class CrossValidation():
         rv_measurements (np.array): array of measured radial velocity values
         rv_errors (np.array): array of radial velocity errors
         kernel_function (func): describes the covariance between two points
-        orbit_params (array): [transit time, period, eccentricity, omega, and Keplerian semi-amplitude] 
+        orbit_params (array or list): [transit time, period, eccentricity, omega, and keplerian semi-amplitude] 
+        train_split (float): number from 0 to 1 that will divide data into a training and testing set
         gamma (float, optional): Defaults to 0.
         jitter (float, optional): Defaults to 0.
 
@@ -186,17 +188,17 @@ class CrossValidation():
     def GP_Predict(self, times_predict, include_keplerian = True):
         """
         times_predict (np.array): set of times for the GPR to predict values for
-        include_keplerian (bool): whether or not to subtract planetary signal in predictions. Defaults to True.
+        include_keplerian (bool): whether or not to include planetary signal as mean function. Defaults to True.
         """
 
         if include_keplerian:
             mean_function = calc_keplerian_signal(self.times, *self.orbit_params) + self.gamma
-            mean_function_predict = calc_keplerian_signal(times_predict, *self.orbit_params) 
+            mean_function_predict = calc_keplerian_signal(times_predict, *self.orbit_params) + self.gamma
         else:
             mean_function = np.zeros_like(self.times) + self.gamma 
-            mean_function_predict = np.zeros_like(times_predict) 
+            mean_function_predict = np.zeros_like(times_predict) + self.gamma
 
-        tot_train_error = np.sqrt(self.rv_errors[self.training_mask]**2 + self.jitter**2)
+        tot_train_error = np.sqrt((self.rv_errors[self.training_mask])**2 + self.jitter**2)
 
         K = build_covariance_matrix(self.times[self.training_mask],self.times[self.training_mask],self.kernel_function) + \
                 (tot_train_error**2) * np.identity(len(self.times[self.training_mask]))
@@ -217,17 +219,23 @@ class CrossValidation():
 
         return predictive_means, predictive_variances
 
-    def Run_CV(self):
-        tot_train_error = np.sqrt(self.rv_errors[self.training_mask]**2 + self.jitter**2)
+    def Run_CV(self, include_keplerian = True):
 
-        K = build_covariance_matrix(self.times[self.training_mask],self.times[self.training_mask],self.kernel_function) + \
-                (tot_train_error**2) * np.identity(len(self.times[self.training_mask]))
+        if include_keplerian:
+            mean_function = calc_keplerian_signal(self.times, *self.orbit_params) + self.gamma 
+        else:
+            mean_function = np.zeros_like(self.times) + self.gamma 
+
+        tot_train_error = np.sqrt((self.rv_errors[self.training_mask])**2 + self.jitter**2)
+
+        K = build_covariance_matrix(self.times[self.training_mask], self.times[self.training_mask], self.kernel_function) + (
+            tot_train_error**2) * np.identity(len(self.times[self.training_mask]))
         
-        K_star_CV = build_covariance_matrix(self.times[self.training_mask],self.times, self.kernel_function)
+        K_star_CV = build_covariance_matrix(self.times[self.training_mask], self.times, self.kernel_function)
         K_doublestar_CV = build_covariance_matrix(self.times, self.times, self.kernel_function)
 
-        CV_means = np.linalg.multi_dot([np.transpose(K_star_CV),np.linalg.inv(K),
-                                        (self.rv_measurements[self.training_mask])])
+        CV_means = mean_function + np.linalg.multi_dot([np.transpose(K_star_CV),np.linalg.inv(K),
+                                        (self.rv_measurements[self.training_mask] - mean_function[self.training_mask])])
         CV_covariances = np.subtract(K_doublestar_CV, 
                                      np.linalg.multi_dot([np.transpose(K_star_CV),np.linalg.inv(K),K_star_CV]))
         CV_variances = np.diag(CV_covariances)
@@ -235,29 +243,25 @@ class CrossValidation():
         return CV_means, CV_variances
 
     def Plot(self, times_predict, include_keplerian = True):
-        """
-        times_predict (np.array): set of times for the GPR to predict values for
-        include_keplerian (bool): whether or not to subtract planetary signal in predictions. Defaults to True.
-        """
 
         predictive_means, predictive_variance = self.GP_Predict(times_predict, include_keplerian)
         std_dev = np.sqrt(predictive_variance)
 
-        CV_means, _ = self.Run_CV()
+        CV_means, _ = self.Run_CV(include_keplerian)
 
         fig,  (ax1, ax2) = plt.subplots(2, sharex=True, height_ratios = [0.7, 0.3])
         fig.subplots_adjust(hspace=0)
 
-        ax1.plot(times_predict, predictive_means, label = "Mean prediction", color = 'k')
+        ax1.plot(times_predict, predictive_means, label = "Mean Prediction", color = 'k')
 
-        ax1.fill_between(times_predict, predictive_means -std_dev, predictive_means+std_dev, label = '1 std. dev', color = '#808080', alpha = 0.3)
-        ax1.fill_between(times_predict, predictive_means-2*std_dev, predictive_means +2*std_dev, label = '2 std. dev', color = '#A9A9A9', alpha = 0.5)
+        ax1.fill_between(times_predict, predictive_means -std_dev, predictive_means+std_dev, label = '1 Std. dev', color = '#808080', alpha = 0.3)
+        ax1.fill_between(times_predict, predictive_means-2*std_dev, predictive_means +2*std_dev, label = '2 Std. dev', color = '#A9A9A9', alpha = 0.5)
 
 
         ax1.errorbar(self.times[self.training_mask], self.rv_measurements[self.training_mask], 
-                     self.rv_errors[self.training_mask], ls="", marker="o", color="r", label="training set")
+                     self.rv_errors[self.training_mask], ls="", marker="o", color="r", label="Training set")
         ax1.errorbar(self.times[self.test_mask], self.rv_measurements[self.test_mask], 
-                     self.rv_errors[self.test_mask], ls="", marker="o", color="b",label="test set")
+                     self.rv_errors[self.test_mask], ls="", marker="^", color="b",label="Test set")
 
 
         ax1.legend(fontsize = 8)
@@ -266,9 +270,9 @@ class CrossValidation():
 
 
         ax2.errorbar(self.times[self.training_mask], self.rv_measurements[self.training_mask] - CV_means[self.training_mask], 
-                     self.rv_errors[self.training_mask], ls="", marker="o", color="r", label="training set")
+                     self.rv_errors[self.training_mask], ls="", marker="o", color="r", label="Training set")
         ax2.errorbar(self.times[self.test_mask], self.rv_measurements[self.test_mask] - CV_means[self.test_mask], 
-                     self.rv_errors[self.test_mask], ls="", marker="o", color="b",label="test set")
+                     self.rv_errors[self.test_mask], ls="", marker="^", color="b",label="Test set")
 
         ax2.legend(fontsize = 8)
 
@@ -281,44 +285,23 @@ class CrossValidation():
         plt.close()
 
     def Histogram(self):
-        CV_means, _ = self.Run_CV()
+        CV_means, CV_variances = self.Run_CV()
 
         plt.figure()
 
-        test_set_gp_resids = []
-        for i in self.test_mask:
-            a = (self.rv_measurements[i] - CV_means[i]) + self.rv_errors[i]
-            total_residual = np.sign(a) * (np.abs(a))**0.5
-            test_set_gp_resids.append(total_residual)
+        test_set_gp_resids = (self.rv_measurements[self.test_mask] - CV_means[self.test_mask]) / np.sqrt(
+            CV_variances[self.test_mask] + self.rv_errors[self.test_mask] ** 2)
 
-        training_set_gp_resids = []
-        for i in self.training_mask:
-            a = (self.rv_measurements[i] - CV_means[i]) + self.rv_errors[i]
-            total_residual = np.sign(a) * (np.abs(a))**0.5
-            training_set_gp_resids.append(total_residual)
+        training_set_gp_resids = (self.rv_measurements[self.training_mask] - CV_means[self.training_mask]) / np.sqrt(
+            CV_variances[self.training_mask] + self.rv_errors[self.training_mask] ** 2)
+        
 
-    
-        plt.hist(test_set_gp_resids, color="b", histtype="step", label="test set", range=(-5, 5), bins=50, density=True)
-        plt.hist( training_set_gp_resids, color="r", alpha=0.5, range=(-5, 5), bins=50, density=True, label="training set",)
+        plt.hist(test_set_gp_resids, color="b", histtype="step", label="Test set", range=(-10, 10),  bins=25, density = True)
+        plt.hist(training_set_gp_resids, color="r", alpha=0.5, range=(-10, 10), bins=25, density = True, label="Training set",)
         plt.legend()
 
         plt.show()
         plt.close()
-
-
-
-###### building test kernel #####
-def quasi_periodic_kernel(ti, tj):
-    '''
-    Computes values for quasi-periodic covariance function.
-
-    Args: 
-        ti, tj (floats) : any two times recorded within the data set
-
-    Return:
-        float
-    '''
-    return GP_amplitude**2 * np.exp(-((np.sin(np.pi * (ti-tj) / P_gp_test ))**2)/(2*lambda_p_test**2) - ((ti-tj)**2 / (lambda_e_test**2)))
 
 
 
