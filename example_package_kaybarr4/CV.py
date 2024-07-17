@@ -1,6 +1,6 @@
 import numpy as np
-import cv_skeleton.kepler as kepler
-import cv_skeleton.plot as plot
+import example_package_kaybarr4.kepler as kepler
+import example_package_kaybarr4.plot as plot
 
 
 ##### GPR HELPER FUNCTION ####
