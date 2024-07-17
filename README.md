@@ -3,7 +3,7 @@ A WIP to create a package that will perform cross-validations for radial velocit
 
 Last Updated: July 17th 2024
 
-Current Version: 0.3.0
+Current Version: 0.2.1
 
 v.0.2 Updates (July 10th 2024):
 * autoformatting
