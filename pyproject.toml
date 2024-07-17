@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "example_package_kaybarr4"
+version = "0.2.1"
+authors = [
+  { name="Kaylee Barrera", email="kaybarr4@gmail.com" },
+]
+description = "A package for evaluating radival velocity signal models using cross-validation methods and Gaussian processes."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Astronomy"
+]
+dependencies = [
+    "numpy",
+    "scipy",
+    "matplotlib",
+    ]

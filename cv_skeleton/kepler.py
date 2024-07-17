@@ -111,7 +111,7 @@ def calc_keplerian_signal(times, t_transit, period, ecc, omega, K):
         period (float): period of orbit [days]
         ecc (float): eccentricity
         omega (float): longitude of periastron (radians)
-        K (float): Keplarian semi_amplitude
+        K (float): Keplarian semi-amplitude
 
     Returns:
         (np.array): array of radial velocity signals
@@ -122,7 +122,7 @@ def calc_keplerian_signal(times, t_transit, period, ecc, omega, K):
         pass
     else:
         raise ValueError(
-            f"Eccentricity must be between 0 <= ecc < 1. Your imput eccentricity was {ecc}"
+            f"Eccentricity must be between 0 <= ecc < 1. Your input eccentricity was {ecc}"
         )
 
     t_periastron = transit_to_periastron(t_transit, period, ecc, omega)

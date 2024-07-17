@@ -1,11 +1,11 @@
-A WIP to create a package that will perform cross-validations for radial velocity measurements 💃🕺
+A WIP to create a package that will perform cross-validations for radial velocity signal models with Gaussian processes 💃🕺
 
 
-Last Updated: July 10th 2024
+Last Updated: July 17th 2024
 
-Version 0.2.0(?)
+Current Version: 0.3.0
 
-Updates:
+v.0.2 Updates (July 10th 2024):
 * autoformatting
 * splitting code into modules: kepler (for keplerian helper functions), plot (to handle plotting), and CV (holding the CrossValidation object + all GPR code). 
 * updating some old error messages in kepler.calc_keplerian_signal function
