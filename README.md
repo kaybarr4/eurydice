@@ -6,6 +6,8 @@ For more detailed documentation, start [here](https://eurydice.readthedocs.io/en
 [![PyPI version](https://badge.fury.io/py/eurydice.svg)](https://badge.fury.io/py/eurydice)
 [![Documentation Status](https://readthedocs.org/projects/eurydice/badge/?version=latest)](https://eurydice.readthedocs.io/en/latest/?badge=latest)
 ![Code Astro](https://img.shields.io/badge/Made%20at-Code/Astro-blueviolet.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 
 Last Updated: July 24th 2024
 
