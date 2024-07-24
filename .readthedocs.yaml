@@ -14,5 +14,6 @@ formats:
 
 python:
    install:
-   - requirements: requirements.txt 
+   - requirements: requirements.txt # eurydice reqs
+   - requirements: docs/requirements.txt #rtd reqs
   
