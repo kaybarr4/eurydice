@@ -16,4 +16,5 @@ python:
    install:
    - requirements: requirements.txt # eurydice reqs
    - requirements: docs/requirements.txt #rtd reqs
-  
+   - method: pip
+     path: . # install eurydice
