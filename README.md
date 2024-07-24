@@ -1,9 +1,14 @@
+EURYDICE: **E**val**U**ating **R**adial velocit**Y** mo**D**els us**I**ng **C**ross-validation and Gaussian proc**E**sses 
+
 A WIP to create a package that will perform cross-validations for radial velocity signal models with Gaussian processes 💃🕺
+For more detailed documentation, start [here](https://eurydice.readthedocs.io/en/latest/)
 
+[![Documentation Status](https://readthedocs.org/projects/eurydice/badge/?version=latest)](https://eurydice.readthedocs.io/en/latest/?badge=latest)
+![Code Astro](https://img.shields.io/badge/Made%20at-Code/Astro-blueviolet.svg)
 
-Last Updated: July 17th 2024
+Last Updated: July 24th 2024
 
-Current Version: 0.2.2
+Current Version: 0.3
 
 v.0.2 Updates (July 10th 2024):
 * autoformatting
