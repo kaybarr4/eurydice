@@ -3,12 +3,12 @@ requires = ["setuptools >= 61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "example_package_kaybarr4"
-version = "0.2.2"
+name = "eurydice"
+version = "0.3"
 authors = [
   { name="Kaylee Barrera", email="kaybarr4@gmail.com" },
 ]
-description = "A package for evaluating radival velocity signal models using cross-validation methods and Gaussian processes."
+description = "A package for evaluating radial velocity signal models using cross-validation methods and Gaussian processes."
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
