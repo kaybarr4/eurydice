@@ -33,7 +33,7 @@ User Guide:
 Changelog:
 ++++++++++
 
-**0.4 (2024-8-)**
+**0.4 (2024-8-16)**
 
 - restructured CrossValidation object to take in pre-defined training and test sets 
 - restructered split function and CrossValidation object to take in data as pandas dataframes for compactness

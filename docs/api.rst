@@ -4,8 +4,7 @@ Detailed API Documentation
 ==========================
 
 .. toctree::
-   :titlesonly:
-
+   :titlesonly:     
    
    CV
    kepler
