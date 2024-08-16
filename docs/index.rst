@@ -1,7 +1,3 @@
-.. eurydice documentation master file, created by
-   sphinx-quickstart on Wed Jul 17 23:25:13 2024.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
 
 .. image:: eurydicebratlogo.png
    :width: 150px
@@ -36,6 +32,14 @@ User Guide:
 
 Changelog:
 ++++++++++
+
+**0.4 (2024-8-)**
+
+- restructured CrossValidation object to take in pre-defined training and test sets 
+- restructered split function and CrossValidation object to take in data as pandas dataframes for compactness
+- new Kernel module: created a Kernel abstract base class for users to utilize in defining their kernels and restructured build_covariance_matrix function and defaultKernel 
+- adding/modifying unit tests for new restructured code
+
 
 **0.3 (2024-7-24)**
 

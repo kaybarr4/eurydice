@@ -1,8 +1,8 @@
 .. _kepler:
 
-Kepler helper functions
+Kepler
 =======================
-Kepler solver and Keplerian signal calculator
+This module contains a Kepler solver, Keplerian signal calculator, and various other helper functions
 
 
 .. automodule:: eurydice.kepler

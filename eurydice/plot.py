@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import norm
 
 
-def plot_cv(CrossValidation, times_predict, include_keplerian=True):
+def plot_cv(CrossValidation, times_predict, include_keplerian=True, inst=None):
     """
     Plots the GP predictions conditioned on the training data together with test split overplotted along with
     a plot of residuals beneath the GP prediction plot
@@ -11,7 +11,8 @@ def plot_cv(CrossValidation, times_predict, include_keplerian=True):
     Args:
         CrossValidation (object): object holding CV data
         times_predict (np.array): set of times for the GPR to predict values for
-        include_keplerian (bool): whether or not to include planetary signal as mean function. Defaults to True.
+        include_keplerian (bool): whether or not to include planetary signal as mean function in GP. Defaults to True.
+        inst (str): which instrument parameters the GP is use in its prediction. If none passed, takes in the parameters of the first instrument given in the inst_params dictionary.
 
     Returns:
         matplotlib.pyplot.Figure
@@ -19,13 +20,13 @@ def plot_cv(CrossValidation, times_predict, include_keplerian=True):
 
     #### gathering GP mean predictions to plot
     predictive_means, predictive_variance = CrossValidation.GP_predict(
-        times_predict, include_keplerian
+        times_predict, include_keplerian, inst
     )
 
     std_dev = np.sqrt(predictive_variance)
 
     #### gathering cross validation results to plot
-    CV_means, _ = CrossValidation.run_CV(include_keplerian)
+    CV_means, _ = CrossValidation.run_CV(include_keplerian, inst)
 
     #### setting up figure
     fig, (ax1, ax2) = plt.subplots(2, sharex=True, height_ratios=[0.7, 0.3])
@@ -54,18 +55,18 @@ def plot_cv(CrossValidation, times_predict, include_keplerian=True):
     )
 
     ax1.errorbar(
-        CrossValidation.times[CrossValidation.training_mask],
-        CrossValidation.rv_measurements[CrossValidation.training_mask],
-        CrossValidation.rv_errors[CrossValidation.training_mask],
+        CrossValidation.training_times,
+        CrossValidation.training_rvs,
+        CrossValidation.training_errors,
         ls="",
         marker="o",
         color="#009aa6",
         label="Training set",
     )
     ax1.errorbar(
-        CrossValidation.times[CrossValidation.test_mask],
-        CrossValidation.rv_measurements[CrossValidation.test_mask],
-        CrossValidation.rv_errors[CrossValidation.test_mask],
+        CrossValidation.test_times,
+        CrossValidation.test_rvs,
+        CrossValidation.test_errors,
         ls="",
         marker="^",
         color="#d82c24",
@@ -79,20 +80,18 @@ def plot_cv(CrossValidation, times_predict, include_keplerian=True):
     ax2.axhline(color="k", ls="--", alpha=0.7)
 
     ax2.errorbar(
-        CrossValidation.times[CrossValidation.training_mask],
-        CrossValidation.rv_measurements[CrossValidation.training_mask]
-        - CV_means[CrossValidation.training_mask],
-        CrossValidation.rv_errors[CrossValidation.training_mask],
+        CrossValidation.training_times,
+        CrossValidation.training_rvs - CV_means[: len(CrossValidation.training_times)],
+        CrossValidation.training_errors,
         ls="",
         marker="o",
         color="#009aa6",
         label="Training set",
     )
     ax2.errorbar(
-        CrossValidation.times[CrossValidation.test_mask],
-        CrossValidation.rv_measurements[CrossValidation.test_mask]
-        - CV_means[CrossValidation.test_mask],
-        CrossValidation.rv_errors[CrossValidation.test_mask],
+        CrossValidation.test_times,
+        CrossValidation.test_rvs - CV_means[len(CrossValidation.training_times) :],
+        CrossValidation.test_errors,
         ls="",
         marker="^",
         color="#d82c24",
@@ -109,36 +108,39 @@ def plot_cv(CrossValidation, times_predict, include_keplerian=True):
     return fig
 
 
-def plot_histogram(CrossValidation, include_Gaussian=False):
+def plot_histogram(
+    CrossValidation, include_Gaussian=False, include_keplerian=True, inst=None
+):
     """
     Plots the residuals of the training and test data from the model conditioned on the training set
 
     Args:
         CrossValidation (object): object holding CV data
         include_Gaussian (bool): whether or not to fit and plot Gaussians to residuals. Defaults to False.
+        include_keplerian (bool): whether or not to include planetary signal as mean function in CV. Defaults to True.
+        inst (str): which instrument parameters the CV is use in its prediction. If none passed, takes in the parameters of the first instrument given in the inst_params dictionary.
+
 
     Returns:
         matplotlib.pyplot.Figure
     """
 
     #### gathering cross validation results to plot
-    CV_means, CV_variances = CrossValidation.run_CV()
+    CV_means, CV_variances = CrossValidation.run_CV(include_keplerian, inst)
 
     #### calculating results for training and test sets
     test_set_gp_resids = (
-        CrossValidation.rv_measurements[CrossValidation.test_mask]
-        - CV_means[CrossValidation.test_mask]
+        CrossValidation.test_rvs - CV_means[len(CrossValidation.training_times) :]
     ) / np.sqrt(
-        CV_variances[CrossValidation.test_mask]
-        + CrossValidation.rv_errors[CrossValidation.test_mask] ** 2
+        CV_variances[len(CrossValidation.training_times) :]
+        + (CrossValidation.test_errors) ** 2
     )
 
     training_set_gp_resids = (
-        CrossValidation.rv_measurements[CrossValidation.training_mask]
-        - CV_means[CrossValidation.training_mask]
+        CrossValidation.training_rvs - CV_means[: len(CrossValidation.training_times)]
     ) / np.sqrt(
-        CV_variances[CrossValidation.training_mask]
-        + CrossValidation.rv_errors[CrossValidation.training_mask] ** 2
+        CV_variances[: len(CrossValidation.training_times)]
+        + (CrossValidation.training_errors) ** 2
     )
 
     #### setting up figure

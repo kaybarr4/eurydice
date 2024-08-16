@@ -8,23 +8,13 @@ For more detailed documentation, start [here](https://eurydice.readthedocs.io/en
 ![Code Astro](https://img.shields.io/badge/Made%20at-Code/Astro-blueviolet.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+Last Updated: August 16 2024
 
-Last Updated: July 24th 2024
-
-Current Version: 0.3
-
-v.0.2 Updates (July 10th 2024):
-* autoformatting
-* splitting code into modules: kepler (for keplerian helper functions), plot (to handle plotting), and CV (holding the CrossValidation object + all GPR code). 
-* updating some old error messages in kepler.calc_keplerian_signal function
-* added a default kernel for the CrossValidation object to use if a predefined one is not passed
-* updating plotting functions to return a matplotlib.plyplot.Figure
-* fitting Gaussians to the residuals on the histogram plot used for CV
-* added functionality for the CrossValidation object to calculate and utilize an N body keplerian mean function 
+Current Version: 0.4
 
 To-Do:
 * adding compatibility with pre-existing GP packages (george, tinygp, celerite): the gist is probably to let code read if the kernel function its passed is a certain object (e.g a george kernel object) and let the code run the GPR and CV using that package's methods
 * writing a tutorial on how to use code with juypter notebook
 * combing through existing code to improve lacking documentation and find more appropriate places to include error messages
-* modifying split function in CrossValidation to let users have a choice as to split data randomly or not (e.g whether to split data 80/20 randomly for training or to split the data such that the first 80 data points chronologically are used to train the model and the last 20 used to assess predictability)
-* writing more tests: how to write tests for GP_predict, run_CV and plotting functions? seems too convoluted for my pea brain at the moment 🫨
+* writing more tests: how to write tests for GP_predict, run_CV and plotting functions? 
+* add std dev to histogram legend

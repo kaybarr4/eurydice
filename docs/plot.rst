@@ -1,8 +1,8 @@
 .. _plot:
 
-Plotting methods
+Plot
 ================
-Functions to plot GP predictions and residual histograms
+This module contains functions to plot GP predictions and residual histograms in CrossValidation object
 
 
 
